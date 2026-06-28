@@ -53,7 +53,7 @@ function hashPassword(password) {
 }
 
 /** 데모용 공통 비밀번호 */
-const DEMO_PASSWORD = "wooju1234";
+const DEMO_PASSWORD = "1234";
 
 /**
  * 초기 시드 데이터: 우주네 가족 (샛별/호섭/우주/유주)
