@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Plus, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Search, Plus, Loader2, List } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { BookCover } from "@/components/ui/BookCover";
@@ -98,6 +99,14 @@ export function BookSearchStep({ onSelect }: BookSearchStepProps) {
           </button>
         </div>
       )}
+
+      {/* 목록으로 가기 */}
+      <Link href="/library" className="mt-6 block">
+        <Button variant="secondary" fullWidth>
+          <List size={18} />
+          목록으로 가기
+        </Button>
+      </Link>
     </Card>
   );
 }
