@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import { User, BookHeart, Bell, Palette } from "lucide-react";
+import type { Genre } from "@prisma/client";
 import { Card, SectionTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { GENRE_LABEL } from "@/lib/genres";
 import { cn } from "@/lib/utils";
+import type { UserSettings } from "@/lib/data";
 
-/** 선택 가능한 장르 (design_system / schema 기준 일부) */
-const GENRES = [
-  "소설", "자기계발", "에세이", "판타지", "모험", "추리",
-  "SF", "로맨스", "경제", "비즈니스", "역사", "인문학",
-  "청소년", "어린이", "고전", "과학",
+/** 설정에서 선택 가능한 장르 (자주 쓰는 항목 위주) */
+const SELECTABLE_GENRES: Genre[] = [
+  "NOVEL", "SELF_HELP", "ESSAY", "FANTASY", "ADVENTURE", "MYSTERY",
+  "SCIENCE_FICTION", "ROMANCE", "ECONOMICS", "BUSINESS", "HISTORY",
+  "HUMANITIES", "YOUNG_ADULT", "CHILDREN", "CLASSIC", "SCIENCE",
 ];
 
 /** 토글 스위치 */
@@ -47,24 +50,48 @@ function Toggle({
   );
 }
 
-/** 설정 페이지 본문 (클라이언트 상태) */
-export function SettingsView() {
-  const [nickname, setNickname] = useState("샛별");
-  const [goal, setGoal] = useState(5);
-  const [genres, setGenres] = useState<string[]>(["소설", "자기계발", "에세이"]);
-  const [notif, setNotif] = useState({
-    activity: true,
-    comment: true,
-    recommendation: false,
-    goal: true,
-  });
-  const [darkMode, setDarkMode] = useState(false);
-  const [fontSize, setFontSize] = useState("normal");
+interface SettingsViewProps {
+  initial: UserSettings;
+}
 
-  const toggleGenre = (g: string) =>
+/** 설정 페이지 본문 (초기값은 서버에서 주입, 저장은 PUT /api/settings) */
+export function SettingsView({ initial }: SettingsViewProps) {
+  const [nickname, setNickname] = useState(initial.nickname);
+  const [goal, setGoal] = useState(initial.monthlyReadingGoal);
+  const [genres, setGenres] = useState<Genre[]>(initial.genres);
+  const [notif, setNotif] = useState(initial.notifications);
+  const [darkMode, setDarkMode] = useState(initial.darkMode);
+  const [fontSize, setFontSize] = useState(initial.fontSize);
+  const [saving, setSaving] = useState(false);
+
+  const toggleGenre = (g: Genre) =>
     setGenres((prev) =>
       prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g],
     );
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname,
+          genres,
+          monthlyReadingGoal: goal,
+          notifications: notif,
+          darkMode,
+          fontSize,
+        }),
+      });
+      if (!res.ok) throw new Error("저장에 실패했어요.");
+      alert("설정이 저장되었어요! ⚙️");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "저장 중 문제가 발생했어요.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const inputClass =
     "w-full rounded-button border border-stone-200 px-4 py-2.5 text-base outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary-100 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-100";
@@ -109,7 +136,7 @@ export function SettingsView() {
           선호 장르
         </p>
         <div className="flex flex-wrap gap-2">
-          {GENRES.map((g) => {
+          {SELECTABLE_GENRES.map((g) => {
             const active = genres.includes(g);
             return (
               <button
@@ -122,7 +149,7 @@ export function SettingsView() {
                     : "bg-stone-100 text-stone-500 hover:bg-stone-200 dark:bg-stone-700 dark:text-stone-300",
                 )}
               >
-                #{g}
+                #{GENRE_LABEL[g]}
               </button>
             );
           })}
@@ -194,8 +221,8 @@ export function SettingsView() {
       </Card>
 
       {/* 저장 */}
-      <Button fullWidth onClick={() => alert("설정이 저장되었어요! ⚙️")}>
-        설정 저장하기
+      <Button fullWidth onClick={handleSave} disabled={saving}>
+        {saving ? "저장 중..." : "설정 저장하기"}
       </Button>
     </div>
   );

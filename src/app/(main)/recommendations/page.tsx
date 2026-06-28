@@ -4,11 +4,12 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { BookCover } from "@/components/ui/BookCover";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
-import { MOCK_RECOMMENDATIONS } from "@/lib/mock-data";
+import { getRecommendations } from "@/lib/data";
 import type { RecommendedBook } from "@/types/library";
 
 /** 추천 페이지 — AI/가족 맞춤 추천 도서 */
-export default function RecommendationsPage() {
+export default async function RecommendationsPage() {
+  const recommendations = await getRecommendations();
   return (
     <PageContainer
       title="오늘의 추천"
@@ -16,7 +17,7 @@ export default function RecommendationsPage() {
       description="가족 각자의 독서 취향에 맞춰 골라봤어요."
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {MOCK_RECOMMENDATIONS.map((book) => (
+        {recommendations.map((book) => (
           <RecommendationCard key={book.id} book={book} />
         ))}
       </div>

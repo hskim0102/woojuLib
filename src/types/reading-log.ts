@@ -8,14 +8,18 @@ export type ReadingStatus = "TO_READ" | "READING" | "COMPLETED";
 
 /** 도서 검색 결과 / 선택된 도서 */
 export interface BookSearchResult {
-  id: string;
+  id: string; // 카카오: ISBN13, 내부 DB: cuid
   title: string;
   author: string;
   publisher: string;
   publishedYear: string;
-  totalPages: number;
+  publishedDate: string; // 출판일 (YYYY-MM-DD)
+  totalPages: number; // 카카오는 페이지 수 미제공 → 0
   genres: string[];
-  coverColor: string; // 표지 플레이스홀더 색상 (실제로는 coverImageUrl)
+  coverColor: string; // 표지 플레이스홀더 색상 (이미지 없을 때 폴백)
+  coverImageUrl?: string; // 카카오 썸네일 표지
+  isbn?: string;
+  summary?: string;
 }
 
 /** 독서 기록 폼 상태 */

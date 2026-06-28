@@ -1,20 +1,19 @@
-"use client";
-
 import Link from "next/link";
 import { Search, Bell, BookMarked } from "lucide-react";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
-import { FAMILY_MEMBERS } from "@/lib/mock-data";
+import { LogoutButton } from "@/components/layout/LogoutButton";
+import type { FamilyMember } from "@/types/dashboard";
+
+interface HeaderProps {
+  /** 현재 로그인 사용자 (인증 전: 부모 '샛별') */
+  currentUser: FamilyMember;
+}
 
 /**
  * 전역 상단 헤더
  * 로고 · 검색 · 알림 · 프로필
- *
- * NOTE: 현재 로그인 사용자는 목업(샛별)으로 고정.
- *       추후 세션(NextAuth)에서 가져온다.
  */
-export function Header() {
-  const currentUser = FAMILY_MEMBERS.mom;
-
+export function Header({ currentUser }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/80 backdrop-blur dark:border-stone-700 dark:bg-stone-800/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
@@ -56,6 +55,9 @@ export function Header() {
         >
           <MemberAvatar member={currentUser} size="md" />
         </button>
+
+        {/* 로그아웃 */}
+        <LogoutButton />
       </div>
     </header>
   );

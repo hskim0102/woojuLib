@@ -3,28 +3,12 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
-import { FAMILY_MEMBERS } from "@/lib/mock-data";
-import type { FamilyMember } from "@/types/dashboard";
-
-/** 구성원별 이번 달 통계 목업 */
-interface MemberStat {
-  member: FamilyMember;
-  role: string;
-  booksRead: number;
-  readingMinutes: number;
-  avgRating: number;
-}
-
-const MEMBER_STATS: MemberStat[] = [
-  { member: FAMILY_MEMBERS.mom, role: "엄마", booksRead: 4, readingMinutes: 240, avgRating: 4.5 },
-  { member: FAMILY_MEMBERS.dad, role: "아빠", booksRead: 3, readingMinutes: 170, avgRating: 4.0 },
-  { member: FAMILY_MEMBERS.son, role: "아들", booksRead: 8, readingMinutes: 375, avgRating: 4.8 },
-  { member: FAMILY_MEMBERS.daughter, role: "딸", booksRead: 2, readingMinutes: 175, avgRating: 4.2 },
-];
+import { getFamilyMemberStats, type MemberStat } from "@/lib/data";
 
 /** 가족 페이지 — 구성원 목록 및 개인별 독서 통계 */
-export default function FamilyPage() {
-  const totalBooks = MEMBER_STATS.reduce((s, m) => s + m.booksRead, 0);
+export default async function FamilyPage() {
+  const stats = await getFamilyMemberStats();
+  const totalBooks = stats.reduce((s, m) => s + m.booksRead, 0);
 
   return (
     <PageContainer
@@ -38,7 +22,7 @@ export default function FamilyPage() {
       }
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {MEMBER_STATS.map((stat) => (
+        {stats.map((stat) => (
           <MemberStatCard key={stat.member.id} stat={stat} />
         ))}
       </div>

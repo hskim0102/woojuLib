@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Search, BookOpen, Plus } from "lucide-react";
+import { Search, Plus, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { MOCK_BOOK_SEARCH } from "@/lib/mock-data";
+import { BookCover } from "@/components/ui/BookCover";
 import type { BookSearchResult } from "@/types/reading-log";
 
 interface BookSearchStepProps {
@@ -13,24 +13,32 @@ interface BookSearchStepProps {
 
 /**
  * [1단계] 도서 검색
- * 제목/저자/ISBN 검색 → 결과 리스트 → 선택
- *
- * NOTE: 현재 목업 필터링. 실제로는 /api/books/search 호출.
+ * 제목/저자 검색 → 결과 리스트 → 선택
+ * GET /api/books/search 호출.
  */
 export function BookSearchStep({ onSelect }: BookSearchStepProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<BookSearchResult[]>([]);
   const [searched, setSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const keyword = query.trim();
     if (!keyword) return;
-    // 목업 검색: 제목/저자에 키워드 포함 여부로 필터
-    const filtered = MOCK_BOOK_SEARCH.filter(
-      (b) => b.title.includes(keyword) || b.author.includes(keyword),
-    );
-    setResults(filtered);
-    setSearched(true);
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/books/search?q=${encodeURIComponent(keyword)}`,
+      );
+      const data: BookSearchResult[] = await res.json();
+      setResults(data);
+      setSearched(true);
+    } catch {
+      setResults([]);
+      setSearched(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,7 +63,9 @@ export function BookSearchStep({ onSelect }: BookSearchStepProps) {
             className="w-full rounded-button border border-stone-200 py-3 pl-10 pr-4 text-base outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary-100 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-100"
           />
         </div>
-        <Button onClick={handleSearch}>검색</Button>
+        <Button onClick={handleSearch} disabled={loading}>
+          {loading ? <Loader2 size={18} className="animate-spin" /> : "검색"}
+        </Button>
       </div>
 
       {/* 검색 결과 */}
@@ -102,22 +112,23 @@ function BookResultItem({
 }) {
   return (
     <li className="flex items-center gap-3 rounded-xl border border-stone-100 p-3 transition-colors hover:border-primary-300 hover:bg-primary-50/40 dark:border-stone-700 dark:hover:bg-stone-700/40">
-      <div
-        className="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
-        style={{ backgroundColor: book.coverColor }}
-        aria-hidden
-      >
-        <BookOpen size={18} className="opacity-80" />
-      </div>
+      <BookCover
+        color={book.coverColor}
+        imageUrl={book.coverImageUrl}
+        alt={book.title}
+        className="h-16 w-12"
+        iconSize={18}
+      />
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold text-stone-800 dark:text-stone-100">
           {book.title}
         </p>
         <p className="truncate text-sm text-stone-500">
-          {book.author} · {book.publisher}
+          {book.author}
+          {book.publisher && ` · ${book.publisher}`}
         </p>
         <p className="text-xs text-stone-400">
-          {book.publishedYear} · {book.totalPages}쪽
+          {book.publishedDate ? `출판일 ${book.publishedDate}` : "출판일 미상"}
         </p>
       </div>
       <Button variant="secondary" onClick={onSelect} className="shrink-0 px-4">

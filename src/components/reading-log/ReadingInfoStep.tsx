@@ -14,6 +14,7 @@ interface ReadingInfoStepProps {
   onChange: (patch: Partial<ReadingLogForm>) => void;
   onChangeBook: () => void;
   onSave: () => void;
+  saving?: boolean;
 }
 
 /** 라벨 래퍼 */
@@ -52,6 +53,7 @@ export function ReadingInfoStep({
   onChange,
   onChangeBook,
   onSave,
+  saving = false,
 }: ReadingInfoStepProps) {
   const showDetailFields = form.status !== "TO_READ";
   const isCompleted = form.status === "COMPLETED";
@@ -106,27 +108,46 @@ export function ReadingInfoStep({
               </div>
             </Field>
 
-            {/* 읽은 페이지 */}
+            {/* 읽은 페이지 — 총 페이지를 알면 슬라이더, 모르면 숫자 입력 */}
             <Field label="읽은 페이지" optional>
-              <input
-                type="range"
-                min={0}
-                max={book.totalPages}
-                value={form.pagesRead}
-                onChange={(e) =>
-                  onChange({ pagesRead: Number(e.target.value) })
-                }
-                className="w-full accent-primary"
-                aria-label="읽은 페이지"
-              />
-              <div className="mt-1 flex justify-between text-sm text-stone-500">
-                <span>
-                  {form.pagesRead} / {book.totalPages}쪽
-                </span>
-                <span className="font-medium text-primary-600">
-                  {progressPercent}%
-                </span>
-              </div>
+              {book.totalPages > 0 ? (
+                <>
+                  <input
+                    type="range"
+                    min={0}
+                    max={book.totalPages}
+                    value={form.pagesRead}
+                    onChange={(e) =>
+                      onChange({ pagesRead: Number(e.target.value) })
+                    }
+                    className="w-full accent-primary"
+                    aria-label="읽은 페이지"
+                  />
+                  <div className="mt-1 flex justify-between text-sm text-stone-500">
+                    <span>
+                      {form.pagesRead} / {book.totalPages}쪽
+                    </span>
+                    <span className="font-medium text-primary-600">
+                      {progressPercent}%
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.pagesRead || ""}
+                    onChange={(e) =>
+                      onChange({ pagesRead: Number(e.target.value) })
+                    }
+                    placeholder="0"
+                    className={`${inputClass} max-w-[120px]`}
+                    aria-label="읽은 페이지"
+                  />
+                  <span className="text-stone-500">쪽까지 읽음</span>
+                </div>
+              )}
             </Field>
 
             {/* 별점 */}
@@ -180,9 +201,9 @@ export function ReadingInfoStep({
         )}
 
         {/* 저장 버튼 */}
-        <Button fullWidth onClick={onSave} className="mt-2">
+        <Button fullWidth onClick={onSave} disabled={saving} className="mt-2">
           <Save size={20} />
-          기록 저장하기
+          {saving ? "저장 중..." : "기록 저장하기"}
         </Button>
       </div>
     </Card>

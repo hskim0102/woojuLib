@@ -17,49 +17,49 @@ datasource db {
 /// 사용자 역할
 enum UserRole {
   PARENT /// 부모/보호자
-  CHILD  /// 자녀
-  GUEST  /// 게스트
+  CHILD /// 자녀
+  GUEST /// 게스트
 }
 
 /// 독서 상태
 enum ReadingStatus {
-  TO_READ   /// 읽고 싶은 책
-  READING   /// 읽는 중
+  TO_READ /// 읽고 싶은 책
+  READING /// 읽는 중
   COMPLETED /// 읽음
-  DROPPED   /// 중단함
+  DROPPED /// 중단함
 }
 
 /// 독서 장르
 enum Genre {
-  NOVEL              /// 소설
-  SELF_HELP          /// 자기계발
-  ESSAY              /// 에세이
-  FANTASY            /// 판타지
-  ADVENTURE          /// 모험
-  MYSTERY            /// 추리
-  SCIENCE_FICTION    /// SF
-  ROMANCE            /// 로맨스
-  ECONOMICS          /// 경제
-  BUSINESS           /// 비즈니스
-  HISTORY            /// 역사
-  HUMANITIES         /// 인문학
-  YOUNG_ADULT        /// 청소년 도서
-  CHILDREN           /// 어린이 도서
-  CLASSIC            /// 고전
-  WEB_NOVEL          /// 웹소설
-  MARTIAL_ARTS       /// 무협
-  BIOGRAPHY          /// 전기/자서전
-  POETRY             /// 시/수필
-  COOKING            /// 요리
-  ART_DESIGN         /// 미술/디자인
-  TRAVEL             /// 여행
-  SCIENCE            /// 과학
-  TECHNOLOGY         /// 기술
-  PSYCHOLOGY         /// 심리학
-  EDUCATION          /// 교육
-  RELIGION           /// 종교/영성
-  SPORTS             /// 스포츠
-  OTHERS             /// 기타
+  NOVEL /// 소설
+  SELF_HELP /// 자기계발
+  ESSAY /// 에세이
+  FANTASY /// 판타지
+  ADVENTURE /// 모험
+  MYSTERY /// 추리
+  SCIENCE_FICTION /// SF
+  ROMANCE /// 로맨스
+  ECONOMICS /// 경제
+  BUSINESS /// 비즈니스
+  HISTORY /// 역사
+  HUMANITIES /// 인문학
+  YOUNG_ADULT /// 청소년 도서
+  CHILDREN /// 어린이 도서
+  CLASSIC /// 고전
+  WEB_NOVEL /// 웹소설
+  MARTIAL_ARTS /// 무협
+  BIOGRAPHY /// 전기/자서전
+  POETRY /// 시/수필
+  COOKING /// 요리
+  ART_DESIGN /// 미술/디자인
+  TRAVEL /// 여행
+  SCIENCE /// 과학
+  TECHNOLOGY /// 기술
+  PSYCHOLOGY /// 심리학
+  EDUCATION /// 교육
+  RELIGION /// 종교/영성
+  SPORTS /// 스포츠
+  OTHERS /// 기타
 }
 
 /// 외부 도서 API 소스
@@ -76,20 +76,22 @@ enum BookSource {
 
 /// 가족 그룹
 model Family {
-  id            String   @id @default(cuid())
-  name          String   @db.VarChar(255)
-  description   String?  @db.Text
-  inviteCode    String   @unique @db.VarChar(100) /// 가족 초대 코드
-  createdById   String
-  createdBy     User     @relation("FamilyCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  id          String  @id @default(cuid())
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+  inviteCode  String  @unique @db.VarChar(100) /// 가족 초대 코드
+  createdById String
+  createdBy   User    @relation("FamilyCreator", fields: [createdById], references: [id], onDelete: Restrict)
 
   /// 관계
-  users         User[]   @relation("FamilyMembers")
-  invites       FamilyInvite[]
+  users   User[]         @relation("FamilyMembers")
+  invites FamilyInvite[]
 
   /// 타임스탐프
-  createdAt     DateTime @default(now()) @db.Timestamptz
-  updatedAt     DateTime @updatedAt @db.Timestamptz
+  createdAt          DateTime             @default(now()) @db.Timestamptz
+  updatedAt          DateTime             @updatedAt @db.Timestamptz
+  familyMonthlyStats FamilyMonthlyStats[]
+  activities         Activity[]
 
   @@index([createdById])
   @@map("families")
@@ -97,36 +99,39 @@ model Family {
 
 /// 사용자 (가족 구성원)
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique @db.VarChar(255)
-  passwordHash      String?  @db.VarChar(255) /// OAuth 사용자는 null
+  id           String  @id @default(cuid())
+  email        String  @unique @db.VarChar(255)
+  passwordHash String? @db.VarChar(255) /// OAuth 사용자는 null
 
   /// 기본 정보
-  nickname          String   @db.VarChar(100)
-  avatarUrl         String?  @db.Text
-  bio               String?  @db.Text
+  nickname  String  @db.VarChar(100)
+  avatarUrl String? @db.Text
+  bio       String? @db.Text
 
   /// 가족 정보
-  familyId          String?
-  family            Family?  @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: Cascade)
-  role              UserRole @default(CHILD)
+  familyId String?
+  family   Family?  @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: Cascade)
+  role     UserRole @default(CHILD)
 
   /// 인증
-  emailVerified     DateTime?
-  lastLoginAt       DateTime?
+  emailVerified DateTime?
+  lastLoginAt   DateTime?
 
   /// 관계
-  createdFamilies   Family[] @relation("FamilyCreator")
-  readingLogs       ReadingLog[]
-  reviews           Review[]
-  comments          Comment[]
+  createdFamilies         Family[]         @relation("FamilyCreator")
+  readingLogs             ReadingLog[]
+  reviews                 Review[]
+  comments                Comment[]
   receivedRecommendations Recommendation[] @relation("RecommendedTo")
   sentRecommendations     Recommendation[] @relation("RecommendedBy")
-  preferences       Preference?
+  preferences             Preference?
+  readingSessions         ReadingSession[]
 
   /// 타임스탐프
-  createdAt         DateTime @default(now()) @db.Timestamptz
-  updatedAt         DateTime @updatedAt @db.Timestamptz
+  createdAt        DateTime           @default(now()) @db.Timestamptz
+  updatedAt        DateTime           @updatedAt @db.Timestamptz
+  userMonthlyStats UserMonthlyStats[]
+  activities       Activity[]
 
   @@index([familyId])
   @@index([email])
@@ -135,50 +140,50 @@ model User {
 
 /// 사용자 선호도 및 설정
 model Preference {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   /// 독서 습관
-  genres                Genre[]  /// 선호 장르 (배열)
-  monthlyReadingGoal    Int      @default(3) /// 월간 독서 목표 권수
-  dailyReadingGoalMinutes Int?    /// 일일 독서 목표 시간 (분)
+  genres                  Genre[] /// 선호 장르 (배열)
+  monthlyReadingGoal      Int     @default(3) /// 월간 독서 목표 권수
+  dailyReadingGoalMinutes Int? /// 일일 독서 목표 시간 (분)
 
   /// 알림 설정
-  notificationsEnabled  Boolean  @default(true)
-  activityNotificationsEnabled Boolean @default(true)
-  commentNotificationsEnabled  Boolean @default(true)
+  notificationsEnabled               Boolean @default(true)
+  activityNotificationsEnabled       Boolean @default(true)
+  commentNotificationsEnabled        Boolean @default(true)
   recommendationNotificationsEnabled Boolean @default(true)
-  goalNotificationsEnabled Boolean @default(true)
+  goalNotificationsEnabled           Boolean @default(true)
 
   /// 프라이버시
-  hiddenFromStats       Boolean  @default(false) /// 가족 통계에서 제외할지
+  hiddenFromStats Boolean @default(false) /// 가족 통계에서 제외할지
 
   /// UI 설정
-  darkMode              Boolean  @default(false)
-  language              String   @default("ko") @db.VarChar(10)
-  fontSize              String   @default("normal") /// small, normal, large, extra_large
+  darkMode Boolean @default(false)
+  language String  @default("ko") @db.VarChar(10)
+  fontSize String  @default("normal") /// small, normal, large, extra_large
 
   /// 타임스탐프
-  updatedAt             DateTime @updatedAt @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
 
   @@map("preferences")
 }
 
 /// 가족 초대
 model FamilyInvite {
-  id            String   @id @default(cuid())
-  familyId      String
-  family        Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
-  email         String   @db.VarChar(255)
-  inviteToken   String   @unique @db.VarChar(255)
-  expiresAt     DateTime @db.Timestamptz
-  acceptedAt    DateTime?
-  acceptedById  String?
+  email        String    @db.VarChar(255)
+  inviteToken  String    @unique @db.VarChar(255)
+  expiresAt    DateTime  @db.Timestamptz
+  acceptedAt   DateTime?
+  acceptedById String?
 
   /// 타임스탐프
-  createdAt     DateTime @default(now()) @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
 
   @@index([familyId])
   @@index([inviteToken])
@@ -192,36 +197,37 @@ model FamilyInvite {
 
 /// 도서
 model Book {
-  id                String   @id @default(cuid())
+  id String @id @default(cuid())
 
   /// 기본 정보
-  title             String   @db.VarChar(500)
-  author            String   @db.VarChar(255)
-  publisher         String?  @db.VarChar(255)
-  publicationDate   DateTime?
-  isbn              String?  @unique @db.VarChar(20) /// ISBN은 nullable (외부 API에서 없을 수 있음)
-  pageCount         Int?
+  title           String    @db.VarChar(500)
+  author          String    @db.VarChar(255)
+  publisher       String?   @db.VarChar(255)
+  publicationDate DateTime?
+  isbn            String?   @unique @db.VarChar(20) /// ISBN은 nullable (외부 API에서 없을 수 있음)
+  pageCount       Int?
 
   /// 이미지 및 설명
-  coverImageUrl     String?  @db.Text
-  summary           String?  @db.Text
+  coverImageUrl String? @db.Text
+  summary       String? @db.Text
 
   /// 장르 (배열로 저장)
-  genres            Genre[]
+  genres Genre[]
 
   /// 외부 API 정보
-  externalId        String?  @db.VarChar(255) /// Google Books ID, Naver ID 등
-  externalSource    BookSource?
-  externalData      Json?    /// 외부 API 응답 데이터 캐시
+  externalId     String?     @db.VarChar(255) /// Google Books ID, Naver ID 등
+  externalSource BookSource?
+  externalData   Json? /// 외부 API 응답 데이터 캐시
 
   /// 관계
-  readingLogs       ReadingLog[]
-  reviews           Review[]
-  recommendations   Recommendation[]
+  readingLogs     ReadingLog[]
+  reviews         Review[]
+  recommendations Recommendation[]
+  readingSessions ReadingSession[]
 
   /// 타임스탐프
-  createdAt         DateTime @default(now()) @db.Timestamptz
-  updatedAt         DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
 
   @@index([isbn])
   @@index([title])
@@ -236,29 +242,29 @@ model Book {
 
 /// 독서 기록
 model ReadingLog {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  bookId          String
-  book            Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   /// 읽기 상태
-  status          ReadingStatus @default(TO_READ)
+  status ReadingStatus @default(TO_READ)
 
   /// 진행 정보
-  startedAt       DateTime?
-  completedAt     DateTime?
-  pagesRead       Int?     /// 현재 읽은 페이지
-  totalPages      Int?     /// 책 전체 페이지 (Book.pageCount 참고)
+  startedAt   DateTime?
+  completedAt DateTime?
+  pagesRead   Int? /// 현재 읽은 페이지
+  totalPages  Int? /// 책 전체 페이지 (Book.pageCount 참고)
 
   /// 평가
-  rating          Int?     /// 1~5 점수
-  readingTimeMinutes Int?  /// 소요 시간 (분)
+  rating             Int? /// 1~5 점수
+  readingTimeMinutes Int? /// 소요 시간 (분)
 
   /// 타임스탐프
-  createdAt       DateTime @default(now()) @db.Timestamptz
-  updatedAt       DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
 
   /// 유니크 제약: 사용자는 한 책에 대해 하나의 읽기 기록만 가능
   @@unique([userId, bookId])
@@ -269,31 +275,52 @@ model ReadingLog {
   @@map("reading_logs")
 }
 
+/// 일자별 독서 세션 (주간 통계 / 독서 시간 추적용)
+model ReadingSession {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bookId String?
+  book   Book?   @relation(fields: [bookId], references: [id], onDelete: SetNull)
+
+  /// 독서한 날짜 (자정 기준)
+  date    DateTime @db.Date
+  /// 독서 시간 (분)
+  minutes Int      @default(0)
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  @@index([userId])
+  @@index([date])
+  @@map("reading_sessions")
+}
+
 /// 독서 감상평/리뷰
 model Review {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  bookId          String
-  book            Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   /// 리뷰 내용
-  title           String?  @db.VarChar(255) /// 리뷰 제목 (선택)
-  content         String   @db.Text        /// 리뷰 본문
-  rating          Int      /// 1~5 별점
-  hasSpoiler      Boolean  @default(false) /// 스포일러 포함 여부
+  title      String? @db.VarChar(255) /// 리뷰 제목 (선택)
+  content    String  @db.Text /// 리뷰 본문
+  rating     Int /// 1~5 별점
+  hasSpoiler Boolean @default(false) /// 스포일러 포함 여부
 
   /// 상호작용
-  likeCount       Int      @default(0)     /// 좋아요 수
-  commentCount    Int      @default(0)     /// 댓글 수 (역정규화 - 성능 최적화)
+  likeCount    Int @default(0) /// 좋아요 수
+  commentCount Int @default(0) /// 댓글 수 (역정규화 - 성능 최적화)
 
   /// 관계
-  comments        Comment[]
+  comments Comment[]
 
   /// 타임스탐프
-  createdAt       DateTime @default(now()) @db.Timestamptz
-  updatedAt       DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
 
   @@index([userId])
   @@index([bookId])
@@ -303,19 +330,19 @@ model Review {
 
 /// 리뷰 댓글
 model Comment {
-  id              String   @id @default(cuid())
-  reviewId        String
-  review          Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   /// 댓글 내용
-  content         String   @db.Text
+  content String @db.Text
 
   /// 타임스탐프
-  createdAt       DateTime @default(now()) @db.Timestamptz
-  updatedAt       DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
 
   @@index([reviewId])
   @@index([userId])
@@ -328,24 +355,24 @@ model Comment {
 
 /// 도서 추천
 model Recommendation {
-  id                String   @id @default(cuid())
-  bookId            String
-  book              Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   /// 추천 대상 (null이면 가족 전체)
-  recommendedToId   String?
-  recommendedTo     User?    @relation("RecommendedTo", fields: [recommendedToId], references: [id], onDelete: Cascade)
+  recommendedToId String?
+  recommendedTo   User?   @relation("RecommendedTo", fields: [recommendedToId], references: [id], onDelete: Cascade)
 
   /// 추천자
-  recommendedById   String
-  recommendedBy     User     @relation("RecommendedBy", fields: [recommendedById], references: [id], onDelete: Cascade)
+  recommendedById String
+  recommendedBy   User   @relation("RecommendedBy", fields: [recommendedById], references: [id], onDelete: Cascade)
 
   /// 추천 정보
-  reason            String?  @db.Text
-  type              String   @default("manual") @db.VarChar(50) /// manual, ai, algorithm 등
+  reason String? @db.Text
+  type   String  @default("manual") @db.VarChar(50) /// manual, ai, algorithm 등
 
   /// 타임스탐프
-  createdAt         DateTime @default(now()) @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
 
   @@index([bookId])
   @@index([recommendedToId])
@@ -360,22 +387,22 @@ model Recommendation {
 
 /// 사용자 월간 통계 (캐시 용도, 정규화를 위해 선택사항)
 model UserMonthlyStats {
-  id                String   @id @default(cuid())
-  userId            String
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  year              Int
-  month             Int      /// 1-12
+  year  Int
+  month Int /// 1-12
 
   /// 통계 데이터
-  booksRead         Int      @default(0)
-  totalPagesRead    Int      @default(0)
-  averageRating     Float?
-  reviewsWritten    Int      @default(0)
+  booksRead      Int    @default(0)
+  totalPagesRead Int    @default(0)
+  averageRating  Float?
+  reviewsWritten Int    @default(0)
 
   /// 타임스탐프
-  createdAt         DateTime @default(now()) @db.Timestamptz
-  updatedAt         DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
 
   /// 월별로 하나의 통계만 존재
   @@unique([userId, year, month])
@@ -385,23 +412,23 @@ model UserMonthlyStats {
 
 /// 가족 월간 통계 (캐시 용도, 선택사항)
 model FamilyMonthlyStats {
-  id                String   @id @default(cuid())
-  familyId          String
-  family            Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
-  year              Int
-  month             Int      /// 1-12
+  year  Int
+  month Int /// 1-12
 
   /// 통계 데이터
-  totalBooksRead    Int      @default(0)
-  totalPagesRead    Int      @default(0)
-  averageRating     Float?
-  activeMembers     Int      @default(0) /// 읽은 책이 있는 멤버 수
-  totalReviews      Int      @default(0)
+  totalBooksRead Int    @default(0)
+  totalPagesRead Int    @default(0)
+  averageRating  Float?
+  activeMembers  Int    @default(0) /// 읽은 책이 있는 멤버 수
+  totalReviews   Int    @default(0)
 
   /// 타임스탐프
-  createdAt         DateTime @default(now()) @db.Timestamptz
-  updatedAt         DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
 
   /// 월별로 하나의 통계만 존재
   @@unique([familyId, year, month])
@@ -415,25 +442,25 @@ model FamilyMonthlyStats {
 
 /// 가족 활동 피드 (가족 내 최근 활동 기록)
 model Activity {
-  id              String   @id @default(cuid())
-  familyId        String
-  family          Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   /// 활동 타입
-  type            String   @db.VarChar(50) /// book_added, review_written, book_completed 등
+  type String @db.VarChar(50) /// book_added, review_written, book_completed 등
 
   /// 관련 리소스 ID
-  bookId          String?
-  reviewId        String?
+  bookId   String?
+  reviewId String?
 
   /// 활동 설명
-  description     String?  @db.Text
+  description String? @db.Text
 
   /// 타임스탐프
-  createdAt       DateTime @default(now()) @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
 
   @@index([familyId])
   @@index([userId])
@@ -444,35 +471,30 @@ model Activity {
 // ============================================================================
 // 이 스키마에 대한 주요 설명
 // ============================================================================
-/*
-1. 데이터 무결성:
-   - 모든 외래키는 onDelete 정책 설정
-   - Cascade: 부모 삭제 시 자식 자동 삭제 (ReadingLog, Review 등)
-   - Restrict: 부모 삭제 불가 (Family 생성자)
-   - 복합 유니크 제약으로 중복 방지
-
-2. 성능 최적화:
-   - 주요 조회 필드에 인덱스 추가
-   - 역정규화 필드 (likeCount, commentCount) 사용
-   - 필요시 통계 테이블로 캐싱
-
-3. 확장성:
-   - Enum으로 타입 안전성 보장
-   - Json 필드로 유연한 데이터 구조
-   - genres를 배열로 저장 (향후 관계형으로 변경 가능)
-   - externalData로 외부 API 응답 캐시
-
-4. 타임존:
-   - @db.Timestamptz로 UTC 시간대 저장
-   - 클라이언트에서 로컬 타임존으로 변환
-
-5. 차이나 최적화:
-   - VARCHAR 크기 지정으로 메모리 최적화
-   - Text는 TEXT 타입 사용
-   - 불린은 BOOLEAN 사용
-
-6. 향후 확장:
-   - FamilyMonthlyStats, UserMonthlyStats는 선택사항
-   - 쿼리 성능 최적화가 필요할 때 추가 가능
-   - Activity 테이블도 선택사항 (피드 기능 구현 시)
-*/
+/**
+ * 1. 데이터 무결성:
+ * - 모든 외래키는 onDelete 정책 설정
+ * - Cascade: 부모 삭제 시 자식 자동 삭제 (ReadingLog, Review 등)
+ * - Restrict: 부모 삭제 불가 (Family 생성자)
+ * - 복합 유니크 제약으로 중복 방지
+ * 2. 성능 최적화:
+ * - 주요 조회 필드에 인덱스 추가
+ * - 역정규화 필드 (likeCount, commentCount) 사용
+ * - 필요시 통계 테이블로 캐싱
+ * 3. 확장성:
+ * - Enum으로 타입 안전성 보장
+ * - Json 필드로 유연한 데이터 구조
+ * - genres를 배열로 저장 (향후 관계형으로 변경 가능)
+ * - externalData로 외부 API 응답 캐시
+ * 4. 타임존:
+ * - @db.Timestamptz로 UTC 시간대 저장
+ * - 클라이언트에서 로컬 타임존으로 변환
+ * 5. 차이나 최적화:
+ * - VARCHAR 크기 지정으로 메모리 최적화
+ * - Text는 TEXT 타입 사용
+ * - 불린은 BOOLEAN 사용
+ * 6. 향후 확장:
+ * - FamilyMonthlyStats, UserMonthlyStats는 선택사항
+ * - 쿼리 성능 최적화가 필요할 때 추가 가능
+ * - Activity 테이블도 선택사항 (피드 기능 구현 시)
+ */

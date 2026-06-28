@@ -47,10 +47,31 @@ export default function NewReadingLogPage() {
     setForm((prev) => ({ ...prev, ...patch }));
   };
 
-  const handleSave = () => {
-    // TODO: POST /api/reading-logs 연동
-    console.log("저장할 독서 기록:", { book: selectedBook, ...form });
-    alert(`「${selectedBook?.title}」 기록이 저장되었어요! 📚`);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!selectedBook) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/reading-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // 카카오 검색 결과는 DB에 없으므로 책 정보를 함께 전송 → 서버에서 upsert
+        body: JSON.stringify({ book: selectedBook, ...form }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: "" }));
+        throw new Error(error || "저장에 실패했어요.");
+      }
+      alert(`「${selectedBook.title}」 기록이 저장되었어요! 📚`);
+      // 저장 후 초기화
+      setSelectedBook(null);
+      setForm(INITIAL_FORM);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "저장 중 문제가 발생했어요.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -72,6 +93,7 @@ export default function NewReadingLogPage() {
             onChange={handleChange}
             onChangeBook={() => setSelectedBook(null)}
             onSave={handleSave}
+            saving={saving}
           />
         )}
       </div>

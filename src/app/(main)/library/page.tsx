@@ -3,10 +3,11 @@ import { Plus } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Button } from "@/components/ui/Button";
 import { LibraryView } from "@/components/library/LibraryView";
-import { MOCK_LIBRARY_BOOKS } from "@/lib/mock-data";
+import { getLibraryBooks } from "@/lib/data";
 
 /** 내 서재 페이지 — 읽는 중 / 읽고 싶은 / 읽은 책 상태별 분류 */
-export default function LibraryPage() {
+export default async function LibraryPage() {
+  const books = await getLibraryBooks();
   return (
     <PageContainer
       title="내 서재"
@@ -20,7 +21,7 @@ export default function LibraryPage() {
         </Link>
       }
     >
-      <LibraryView books={MOCK_LIBRARY_BOOKS} />
+      <LibraryView books={books} />
     </PageContainer>
   );
 }

@@ -344,11 +344,13 @@
   - 관계형 데이터 모델링에 최적
   - JSONB 지원으로 유연한 스키마
   - 확장 가능한 성능
+  - ✅ **현재 구현**: [Prisma Postgres](https://www.prisma.io/postgres) (`db.prisma.io`) 사용 중. 추후 Vercel/자체 호스팅으로 이전 가능
 
 - **Redis** (캐싱 & 세션)
   - 추천 알고리즘 캐싱
   - 실시간 알림 푸시
   - 세션 관리
+  - ⏳ 미도입 (확장 시 추가 예정)
 
 #### ORM
 - **Prisma**
@@ -356,13 +358,14 @@
   - 자동 마이그레이션
   - 개발 생산성 향상
   - 복잡한 쿼리도 타입 안전함
+  - ✅ **현재 구현**: Prisma **6.x** 사용 (Prisma 7은 driver adapter 필수로 도입 보류). 스키마는 [`schema_draft.prisma`](./schema_draft.prisma) 참고
 
 #### 인증 & 인가
-- **NextAuth.js v5** (Next.js 통합)
-  - 이메일/비밀번호 인증
-  - OAuth 제공자 통합 (Google, Apple, Naver, Kakao)
-  - JWT 또는 세션 기반 인증
-  - 가족 계정 관리 확장 가능
+- **인증 방식**
+  - ✅ **현재 구현**: 경량 자체 세션 인증 — Node `crypto` 기반 (scrypt 비밀번호 해시 + HMAC 서명 httpOnly 쿠키). Next 16 호환을 위해 의존성 없이 구현
+  - 보호 방식: 서버 컴포넌트 레이아웃 게이트(`(main)`, `reading-log`) + API 라우트별 세션 검증
+  - ⏳ **추후 전환**: OAuth(Google/Apple/Naver/Kakao) 요건이 커지면 NextAuth.js(Auth.js)로 마이그레이션. `src/lib/auth.ts` 와 `getCurrentUserId`/`getCurrentUserOrNull` 만 교체하면 됨
+  - 역할 기반 권한(RBAC): `User.role` (PARENT/CHILD/GUEST)
 
 #### AI/추천 엔진
 - **Python (FastAPI)**를 별도 마이크로서비스로 구현
@@ -395,8 +398,9 @@
   - **Lambda**: 서버리스 AI 추천 엔진
 
 #### 데이터베이스 호스팅
-- **Vercel Postgres** (초기): PostgreSQL 관리형 서비스
-- **AWS RDS** (프로덕션): 고급 기능, 자동 백업
+- ✅ **현재**: Prisma Postgres (`db.prisma.io`) — 접속 정보는 gitignore된 `.env`/`.env.local`의 `DATABASE_URL`
+- **Vercel Postgres / AWS RDS** (프로덕션 이전 후보): 고급 기능, 자동 백업
+- 초기 데이터: `prisma/seed.mjs` (우주네 가족 4명 · 데모 비밀번호 `wooju1234`)
 
 #### 환경 관리
 - **.env.local**: 로컬 개발 환경

@@ -5,7 +5,6 @@ import type {
   ReviewFeedItem,
   WeeklyReadingStat,
 } from "@/types/dashboard";
-import type { BookSearchResult } from "@/types/reading-log";
 import type { LibraryBook, RecommendedBook } from "@/types/library";
 
 /**
@@ -113,49 +112,6 @@ export const MOCK_WEEKLY_STATS: WeeklyReadingStat[] = [
   { day: "일", mom: 45, dad: 30, son: 70, daughter: 35 },
 ];
 
-/** 도서 검색 목업 결과 (실제로는 Google/Naver/Kakao Books API 호출) */
-export const MOCK_BOOK_SEARCH: BookSearchResult[] = [
-  {
-    id: "s1",
-    title: "해리포터와 마법사의 돌",
-    author: "J.K. 롤링",
-    publisher: "문학수첩",
-    publishedYear: "2019",
-    totalPages: 328,
-    genres: ["판타지", "모험"],
-    coverColor: "#8B5CF6",
-  },
-  {
-    id: "s2",
-    title: "해리포터와 비밀의 방",
-    author: "J.K. 롤링",
-    publisher: "문학수첩",
-    publishedYear: "2019",
-    totalPages: 360,
-    genres: ["판타지", "모험"],
-    coverColor: "#6D28D9",
-  },
-  {
-    id: "s3",
-    title: "불편한 편의점",
-    author: "김호연",
-    publisher: "나무옆의자",
-    publishedYear: "2021",
-    totalPages: 280,
-    genres: ["소설"],
-    coverColor: "#FB7185",
-  },
-  {
-    id: "s4",
-    title: "어린 왕자",
-    author: "생텍쥐페리",
-    publisher: "열린책들",
-    publishedYear: "2015",
-    totalPages: 136,
-    genres: ["소설", "고전"],
-    coverColor: "#14B8A6",
-  },
-];
 
 /** 내 서재 목업 (상태별 분류 데이터) */
 export const MOCK_LIBRARY_BOOKS: LibraryBook[] = [

@@ -1,5 +1,5 @@
-import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { BookCover } from "@/components/ui/BookCover";
 import type { BookSearchResult } from "@/types/reading-log";
 
 interface SelectedBookCardProps {
@@ -11,22 +11,27 @@ interface SelectedBookCardProps {
 export function SelectedBookCard({ book, onChange }: SelectedBookCardProps) {
   return (
     <div className="flex items-center gap-4 border-b border-stone-100 pb-5 dark:border-stone-700">
-      <div
-        className="flex h-24 w-16 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
-        style={{ backgroundColor: book.coverColor }}
-        aria-hidden
-      >
-        <BookOpen size={24} className="opacity-80" />
-      </div>
+      <BookCover
+        color={book.coverColor}
+        imageUrl={book.coverImageUrl}
+        alt={book.title}
+        className="h-24 w-16"
+        iconSize={24}
+      />
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-stone-800 dark:text-stone-100">
           {book.title}
         </p>
         <p className="text-sm text-stone-500">
-          {book.author} · {book.publisher}
+          {book.author}
+          {book.publisher && ` · ${book.publisher}`}
         </p>
-        <div className="mt-1 flex flex-wrap gap-1">
-          <span className="text-xs text-stone-400">{book.totalPages}쪽</span>
+        <div className="mt-1 flex flex-wrap items-center gap-1">
+          {book.publishedDate && (
+            <span className="text-xs text-stone-400">
+              출판일 {book.publishedDate}
+            </span>
+          )}
           {book.genres.map((g) => (
             <span
               key={g}
