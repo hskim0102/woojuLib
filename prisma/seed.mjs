@@ -1,7 +1,49 @@
 import { PrismaClient } from "@prisma/client";
 import { scryptSync, randomBytes } from "crypto";
+import { readFileSync } from "fs";
+
+/** node 단독 실행 시 .env 를 process.env 로 로드 */
+function loadEnv() {
+  try {
+    const txt = readFileSync(new URL("../.env", import.meta.url), "utf8");
+    for (const line of txt.split("\n")) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*"?([^"\n]*)"?\s*$/);
+      if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2];
+    }
+  } catch {
+    /* .env 없으면 무시 */
+  }
+}
+loadEnv();
 
 const prisma = new PrismaClient();
+
+/**
+ * 카카오 도서 검색으로 표지/ISBN/출판정보 조회.
+ * 제목이 가장 잘 맞는 결과를 고른다. 실패하면 null.
+ */
+async function fetchKakaoMeta(title) {
+  const key = process.env.KAKAO_REST_API_KEY;
+  if (!key) return null;
+  try {
+    const url = `https://dapi.kakao.com/v3/search/book?target=title&size=5&query=${encodeURIComponent(title)}`;
+    const res = await fetch(url, { headers: { Authorization: `KakaoAK ${key}` } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const docs = data.documents ?? [];
+    const pick = docs.find((d) => d.title.includes(title)) ?? docs[0];
+    if (!pick) return null;
+    const isbn13 = (pick.isbn || "").split(" ").find((s) => s.length === 13);
+    return {
+      coverImageUrl: pick.thumbnail || null,
+      isbn: isbn13 || null,
+      publisher: pick.publisher || null,
+      publicationDate: pick.datetime ? new Date(pick.datetime) : null,
+    };
+  } catch {
+    return null;
+  }
+}
 
 /** src/lib/auth.ts 의 hashPassword 와 동일 방식 ("salt:hash") */
 function hashPassword(password) {
@@ -38,9 +80,11 @@ async function main() {
   // 1) 가족 생성자(샛별)를 먼저 만든다 (familyId 없이)
   const mom = await prisma.user.create({
     data: {
+      loginId: "satbyul",
       email: "satbyul@wooju.family",
       nickname: "샛별",
       role: "PARENT",
+      birthYear: 1986,
       passwordHash: hashPassword(DEMO_PASSWORD),
     },
   });
@@ -62,13 +106,13 @@ async function main() {
   });
 
   const dad = await prisma.user.create({
-    data: { email: "hoseop@wooju.family", nickname: "호섭", role: "PARENT", familyId: family.id, passwordHash: hashPassword(DEMO_PASSWORD) },
+    data: { loginId: "hoseop", email: "hoseop@wooju.family", nickname: "호섭", role: "PARENT", familyId: family.id, birthYear: 1984, passwordHash: hashPassword(DEMO_PASSWORD) },
   });
   const son = await prisma.user.create({
-    data: { email: "wooju@wooju.family", nickname: "우주", role: "CHILD", familyId: family.id, passwordHash: hashPassword(DEMO_PASSWORD) },
+    data: { loginId: "wooju", email: "wooju@wooju.family", nickname: "우주", role: "CHILD", familyId: family.id, birthYear: 2018, passwordHash: hashPassword(DEMO_PASSWORD) },
   });
   const daughter = await prisma.user.create({
-    data: { email: "yuju@wooju.family", nickname: "유주", role: "CHILD", familyId: family.id, passwordHash: hashPassword(DEMO_PASSWORD) },
+    data: { loginId: "yuju", email: "yuju@wooju.family", nickname: "유주", role: "CHILD", familyId: family.id, birthYear: 2019, passwordHash: hashPassword(DEMO_PASSWORD) },
   });
 
   // 4) 선호도/목표
@@ -97,15 +141,21 @@ async function main() {
   ];
 
   const books = {};
+  let coverCount = 0;
   for (const b of bookData) {
+    const meta = await fetchKakaoMeta(b.title); // 카카오에서 실제 표지 조회
+    if (meta?.coverImageUrl) coverCount++;
     const created = await prisma.book.create({
       data: {
         title: b.title,
         author: b.author,
-        publisher: b.publisher,
+        publisher: meta?.publisher ?? b.publisher,
         pageCount: b.pageCount,
         genres: b.genres,
-        externalSource: "MANUAL",
+        isbn: meta?.isbn ?? null,
+        coverImageUrl: meta?.coverImageUrl ?? null,
+        publicationDate: meta?.publicationDate ?? null,
+        externalSource: meta?.coverImageUrl ? "KAKAO_BOOKS" : "MANUAL",
       },
     });
     books[b.key] = created;
@@ -173,7 +223,7 @@ async function main() {
   await prisma.readingSession.createMany({ data: sessionRows });
 
   console.log(
-    `✅ 시드 완료: 가족 4명, 책 11권, 독서기록 10건, 리뷰 3건, 추천 4건, 주간세션 ${sessionRows.length}건`,
+    `✅ 시드 완료: 가족 4명, 책 11권(표지 ${coverCount}권), 독서기록 10건, 리뷰 3건, 추천 4건, 주간세션 ${sessionRows.length}건`,
   );
 }
 

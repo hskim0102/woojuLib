@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 /** 로그인 페이지 (앱 셸 없이 독립 렌더) */
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ loginId, password }),
       });
       if (!res.ok) {
         const { error } = await res.json().catch(() => ({ error: "" }));
@@ -61,14 +61,15 @@ export default function LoginPage() {
         >
           <div>
             <label className="mb-1 block text-sm font-medium text-stone-600 dark:text-stone-300">
-              이메일
+              아이디
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="satbyul@wooju.family"
-              autoComplete="email"
+              type="text"
+              value={loginId}
+              onChange={(e) => setLoginId(e.target.value)}
+              placeholder="아이디를 입력하세요"
+              autoComplete="username"
+              autoCapitalize="none"
               required
               className={inputClass}
             />

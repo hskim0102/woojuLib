@@ -12,9 +12,9 @@ export default async function RecommendationsPage() {
   const recommendations = await getRecommendations();
   return (
     <PageContainer
-      title="오늘의 추천"
+      title="이달의 추천"
       emoji="✨"
-      description="가족 각자의 독서 취향에 맞춰 골라봤어요."
+      description="가족 각자의 나이에 맞춰 이번 달 추천 도서를 골라봤어요."
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {recommendations.map((book) => (
@@ -28,7 +28,13 @@ export default async function RecommendationsPage() {
 function RecommendationCard({ book }: { book: RecommendedBook }) {
   return (
     <Card className="flex gap-4 hover:shadow-md">
-      <BookCover color={book.coverColor} className="h-32 w-24" iconSize={30} />
+      <BookCover
+        color={book.coverColor}
+        imageUrl={book.coverImageUrl}
+        alt={book.title}
+        className="h-32 w-24"
+        iconSize={30}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
         <p className="font-semibold text-stone-800 dark:text-stone-100">
           {book.title}

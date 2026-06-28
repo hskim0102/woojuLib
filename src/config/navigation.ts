@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Library,
+  BookCopy,
   PenLine,
   MessageSquare,
   Sparkles,
@@ -25,6 +26,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { label: "대시보드", href: "/dashboard", icon: LayoutDashboard, inBottomNav: true },
   { label: "내 서재", href: "/library", icon: Library, inBottomNav: true },
+  { label: "가족 서재", href: "/family-library", icon: BookCopy },
   { label: "기록하기", href: "/reading-log/new", icon: PenLine, inBottomNav: true },
   { label: "리뷰", href: "/reviews", icon: MessageSquare, inBottomNav: true },
   { label: "추천", href: "/recommendations", icon: Sparkles },

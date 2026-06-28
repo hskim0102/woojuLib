@@ -107,6 +107,7 @@ model User {
   nickname  String  @db.VarChar(100)
   avatarUrl String? @db.Text
   bio       String? @db.Text
+  birthYear Int? /// 출생연도 (나이 기반 추천용)
 
   /// 가족 정보
   familyId String?
@@ -125,6 +126,7 @@ model User {
   receivedRecommendations Recommendation[] @relation("RecommendedTo")
   sentRecommendations     Recommendation[] @relation("RecommendedBy")
   preferences             Preference?
+  readingSessions         ReadingSession[]
 
   /// 타임스탐프
   createdAt        DateTime           @default(now()) @db.Timestamptz
@@ -222,6 +224,7 @@ model Book {
   readingLogs     ReadingLog[]
   reviews         Review[]
   recommendations Recommendation[]
+  readingSessions ReadingSession[]
 
   /// 타임스탐프
   createdAt DateTime @default(now()) @db.Timestamptz
@@ -271,6 +274,27 @@ model ReadingLog {
   @@index([status])
   @@index([completedAt])
   @@map("reading_logs")
+}
+
+/// 일자별 독서 세션 (주간 통계 / 독서 시간 추적용)
+model ReadingSession {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bookId String?
+  book   Book?   @relation(fields: [bookId], references: [id], onDelete: SetNull)
+
+  /// 독서한 날짜 (자정 기준)
+  date    DateTime @db.Date
+  /// 독서 시간 (분)
+  minutes Int      @default(0)
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  @@index([userId])
+  @@index([date])
+  @@map("reading_sessions")
 }
 
 /// 독서 감상평/리뷰

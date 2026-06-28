@@ -100,6 +100,7 @@ model Family {
 /// 사용자 (가족 구성원)
 model User {
   id           String  @id @default(cuid())
+  loginId      String? @unique @db.VarChar(50) /// 로그인용 아이디 (이메일과 별개)
   email        String  @unique @db.VarChar(255)
   passwordHash String? @db.VarChar(255) /// OAuth 사용자는 null
 
@@ -107,6 +108,7 @@ model User {
   nickname  String  @db.VarChar(100)
   avatarUrl String? @db.Text
   bio       String? @db.Text
+  birthYear Int? /// 출생연도 (나이 기반 추천용)
 
   /// 가족 정보
   familyId String?

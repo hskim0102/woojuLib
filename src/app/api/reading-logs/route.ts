@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/lib/data";
+import { getSessionUserId } from "@/lib/auth";
 import type { BookSearchResult, ReadingStatus } from "@/types/reading-log";
 
 interface CreateReadingLogBody {
@@ -64,6 +64,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "잘못된 요청 형식입니다." }, { status: 400 });
   }
 
+  const userId = await getSessionUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
+  }
+
   if (!body.status) {
     return NextResponse.json({ error: "status 는 필수입니다." }, { status: 400 });
   }
@@ -77,7 +82,6 @@ export async function POST(request: Request) {
   }
 
   const book = await prisma.book.findUniqueOrThrow({ where: { id: bookId } });
-  const userId = await getCurrentUserId();
   const readingTime =
     body.readingTimeMinutes === "" || body.readingTimeMinutes == null
       ? null

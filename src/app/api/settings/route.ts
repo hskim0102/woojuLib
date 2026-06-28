@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { Genre } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/lib/data";
+import { getSessionUserId } from "@/lib/auth";
 
 interface UpdateSettingsBody {
   nickname?: string;
@@ -29,7 +29,10 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "잘못된 요청 형식입니다." }, { status: 400 });
   }
 
-  const userId = await getCurrentUserId();
+  const userId = await getSessionUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
+  }
   const n = body.notifications ?? {};
 
   // 닉네임(프로필) 업데이트

@@ -27,6 +27,7 @@ export interface ReadingBook {
   title: string;
   author: string;
   coverColor: string; // 표지 플레이스홀더 색상
+  coverImageUrl?: string; // 실제 표지
   pagesRead: number;
   totalPages: number;
   reader: FamilyMember;

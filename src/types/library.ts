@@ -7,6 +7,7 @@ export interface LibraryBook {
   title: string;
   author: string;
   coverColor: string;
+  coverImageUrl?: string; // 카카오 등 실제 표지
   status: ReadingStatus;
   pagesRead: number;
   totalPages: number;
@@ -20,6 +21,7 @@ export interface RecommendedBook {
   title: string;
   author: string;
   coverColor: string;
+  coverImageUrl?: string; // 실제 표지
   genres: string[];
   reason: string; // 추천 이유
   forMember: FamilyMember; // 추천 대상

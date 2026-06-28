@@ -1,6 +1,7 @@
 import { BookOpen } from "lucide-react";
 import { Card, SectionTitle } from "@/components/ui/Card";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
+import { BookCover } from "@/components/ui/BookCover";
 import type { ReadingBook } from "@/types/dashboard";
 
 interface ReadingNowListProps {
@@ -35,14 +36,14 @@ function ReadingBookItem({ book }: { book: ReadingBook }) {
 
   return (
     <li className="flex gap-3 rounded-xl p-2 transition-colors hover:bg-stone-50 dark:hover:bg-stone-700/40">
-      {/* 표지 플레이스홀더 */}
-      <div
-        className="flex h-20 w-14 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
-        style={{ backgroundColor: book.coverColor }}
-        aria-hidden
-      >
-        <BookOpen size={20} className="opacity-80" />
-      </div>
+      {/* 표지 (실제 이미지 또는 색상 폴백) */}
+      <BookCover
+        color={book.coverColor}
+        imageUrl={book.coverImageUrl}
+        alt={book.title}
+        className="h-20 w-14"
+        iconSize={20}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col justify-between">
         <div className="flex items-start justify-between gap-2">

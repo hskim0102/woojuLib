@@ -2,7 +2,7 @@ import type { Genre } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/auth";
 import { colorForSeed } from "@/lib/colors";
-import { genreLabels } from "@/lib/genres";
+import { searchKakaoBooks } from "@/lib/kakao";
 import { toFamilyMember } from "@/lib/member-theme";
 import { formatRelative } from "@/lib/time";
 import type {
@@ -154,6 +154,7 @@ export async function getReadingBooks(): Promise<ReadingBook[]> {
     title: log.book.title,
     author: log.book.author,
     coverColor: colorForSeed(log.book.title),
+    coverImageUrl: log.book.coverImageUrl ?? undefined,
     pagesRead: log.pagesRead ?? 0,
     totalPages: log.totalPages ?? log.book.pageCount ?? 0,
     reader: toFamilyMember(log.user),
@@ -183,11 +184,20 @@ export async function getReviewFeed(limit = 10): Promise<ReviewFeedItem[]> {
   }));
 }
 
-/** 서재 책 목록 (상태 무관 전체) */
-export async function getLibraryBooks(): Promise<LibraryBook[]> {
-  const family = await getFamily();
+/**
+ * 서재 책 목록 (상태 무관 전체).
+ * @param scope "mine" = 내 책만 / "family" = 가족 전체
+ */
+export async function getLibraryBooks(
+  scope: "mine" | "family" = "family",
+): Promise<LibraryBook[]> {
+  const where =
+    scope === "mine"
+      ? { userId: await getCurrentUserId() }
+      : { user: { familyId: (await getFamily()).id } };
+
   const logs = await prisma.readingLog.findMany({
-    where: { user: { familyId: family.id } },
+    where,
     include: { book: true, user: true },
     orderBy: { updatedAt: "desc" },
   });
@@ -197,6 +207,7 @@ export async function getLibraryBooks(): Promise<LibraryBook[]> {
     title: log.book.title,
     author: log.book.author,
     coverColor: colorForSeed(log.book.title),
+    coverImageUrl: log.book.coverImageUrl ?? undefined,
     status: log.status as ReadingStatus,
     pagesRead: log.pagesRead ?? 0,
     totalPages: log.totalPages ?? log.book.pageCount ?? 0,
@@ -205,24 +216,64 @@ export async function getLibraryBooks(): Promise<LibraryBook[]> {
   }));
 }
 
-/** 추천 도서 목록 */
+/** 나이대별 추천 키워드 풀 (월마다 다른 키워드 선택) */
+function keywordsForAge(age: number): string[] {
+  if (age <= 7) return ["그림책", "유아 동화", "창작 동화"];
+  if (age <= 9) return ["어린이 동화", "초등 저학년", "어린이 모험"];
+  if (age <= 13) return ["어린이 소설", "초등 고학년", "청소년 모험"];
+  if (age <= 18) return ["청소년 소설", "성장 소설", "청소년 추천"];
+  if (age <= 39) return ["베스트셀러 소설", "자기계발", "에세이"];
+  return ["인문 교양", "경제 경영", "역사 교양"];
+}
+
+/**
+ * 추천 도서 목록 — 구성원 각자의 나이에 맞춰 이번 달 추천 도서를 생성.
+ * 카카오 도서 검색을 활용하며, 월(month)에 따라 키워드/선택이 바뀐다.
+ */
 export async function getRecommendations(): Promise<RecommendedBook[]> {
   const family = await getFamily();
-  const recs = await prisma.recommendation.findMany({
-    where: { recommendedBy: { familyId: family.id } },
-    include: { book: true, recommendedTo: true, recommendedBy: true },
-    orderBy: { createdAt: "desc" },
+  const users = await prisma.user.findMany({
+    where: { familyId: family.id },
+    orderBy: { createdAt: "asc" },
   });
 
-  return recs.map((rec) => ({
-    id: rec.id,
-    title: rec.book.title,
-    author: rec.book.author,
-    coverColor: colorForSeed(rec.book.title),
-    genres: genreLabels(rec.book.genres),
-    reason: rec.reason ?? "이 책을 추천해요",
-    forMember: toFamilyMember(rec.recommendedTo ?? rec.recommendedBy),
-  }));
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 1~12
+
+  const perMember = await Promise.all(
+    users.map(async (u) => {
+      const age = u.birthYear ? year - u.birthYear : 30;
+      const keywords = keywordsForAge(age);
+      const keyword = keywords[(month - 1) % keywords.length];
+
+      const books = await searchKakaoBooks(keyword, {
+        target: "title",
+        size: 10,
+      });
+      if (books.length === 0) return [] as RecommendedBook[];
+
+      // 월에 따라 시작 위치를 바꿔 매달 다른 책이 추천되도록
+      const offset = (month * 3) % books.length;
+      const picks: RecommendedBook[] = [];
+      for (let i = 0; i < books.length && picks.length < 2; i++) {
+        const b = books[(offset + i) % books.length];
+        picks.push({
+          id: `${u.id}-${b.id}`,
+          title: b.title,
+          author: b.author,
+          coverColor: b.coverColor,
+          coverImageUrl: b.coverImageUrl,
+          genres: [keyword], // 추천 카테고리를 태그로 노출
+          reason: `${age}세 ${u.nickname}님을 위한 ${month}월 추천 도서`,
+          forMember: toFamilyMember(u),
+        });
+      }
+      return picks;
+    }),
+  );
+
+  return perMember.flat();
 }
 
 /**
